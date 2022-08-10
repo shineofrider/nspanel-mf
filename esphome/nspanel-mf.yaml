@@ -624,9 +624,9 @@ text_sensor:
         - wait_until:
             switch.is_on: nextion_init
         - lambda: |-
-            int symbol = 29;
+            int symbol = 33;
             if (id(lampada_foto).state == "off") {
-              symbol=28;
+              symbol=32;
             }
             id(disp1).send_command_printf("Lights.light2.pic=%i", symbol);
 
@@ -650,9 +650,9 @@ text_sensor:
         - wait_until:
             switch.is_on: nextion_init
         - lambda: |-
-            int symbol = 27;
+            int symbol = 33;
             if (id(lampada_albero).state == "off") {
-              symbol=26;
+              symbol=32;
             }
             id(disp1).send_command_printf("Lights.light3.pic=%i", symbol);
 
