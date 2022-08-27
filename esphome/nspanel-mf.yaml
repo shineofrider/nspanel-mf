@@ -1,6 +1,3 @@
-# NSPanel YAML by marcfager. Please check github for credits: https://github.com/marcfager/nspanel-mf
-# Version 2022-01-19
-
 substitutions:
   # Name the device and it's entities
   device_name: nspanel
@@ -184,27 +181,7 @@ binary_sensor:
     name: $device_name Music volup
     page_id: 1
     component_id: 8
-    
-  - platform: nextion
-    name: $device_name Playlist cocktail
-    page_id: 1
-    component_id: 9
-
-  - platform: nextion
-    name: $device_name Playlist food
-    page_id: 1
-    component_id: 10
-    
-  - platform: nextion
-    name: $device_name Playlist dance
-    page_id: 1
-    component_id: 11
-
-  - platform: nextion
-    name: $device_name Playlist note
-    page_id: 1
-    component_id: 12    
-    
+      
   # Buttons on the Lights page
   - platform: nextion
     name: $device_name Light 0 button
@@ -286,6 +263,31 @@ binary_sensor:
           data:
             entity_id: light.sonoffmini_ingresso_light
 
+  # Buttons on the Thermostat page
+  - platform: nextion
+    name: $device_name Thermostat Power button
+    page_id: 8
+    component_id: 2
+
+  - platform: nextion
+    name: $device_name Thermostat Cool button
+    page_id: 8
+    component_id: 4
+
+  - platform: nextion
+    name: $device_name Thermostat Heat button
+    page_id: 8
+    component_id: 6
+
+  - platform: nextion
+    name: $device_name Thermostat Up button
+    page_id: 8
+    component_id: 7
+
+  - platform: nextion
+    name: $device_name Thermostat Down button
+    page_id: 8
+    component_id: 8
 
 output:
   # Buzzer for playing tones
@@ -459,7 +461,7 @@ sensor:
             switch.is_on: nextion_init
         - lambda: id(disp1).set_component_text_printf("Home.temp", "%.1f", id(current_temperature).state);
 
-  # Temperature outside feels like, fetched from HA
+  # Temperature inside, fetched from nspanel sensor
   - platform: homeassistant
     id: temp_home
     entity_id: sensor.nspanel_temperature
@@ -468,6 +470,27 @@ sensor:
         - wait_until:
             switch.is_on: nextion_init
         - lambda: id(disp1).set_component_text_printf("Home.temphome", "%.1f", id(temp_home).state);
+
+  # Temperature thermostat
+  - platform: homeassistant
+    id: tempterm
+    entity_id: climate.termostato
+    attribute: current_temperature
+    on_value:
+      then:
+        - wait_until:
+            switch.is_on: nextion_init
+        - lambda: id(disp1).set_component_text_printf("Lights2.tempterm", "%.1f", id(tempterm).state);
+  
+  - platform: homeassistant
+    id: setpoint_value
+    entity_id: climate.termostato
+    attribute: temperature
+    on_value:
+      then:
+        - wait_until:
+            switch.is_on: nextion_init
+        - lambda: id(disp1).set_component_text_printf("Lights2.setpoint", "%.1f", id(setpoint_value).state);        
 
 text_sensor:
   # IP address of device. Not really needed for HA (as HA already knows it), but for showing on the display during startup. The startup screen will leave on if no instance connects to the API.
@@ -598,9 +621,9 @@ text_sensor:
         - wait_until:
             switch.is_on: nextion_init
         - lambda: |-
-            int symbol = 25;
+            int symbol = 49;
             if (id(ambilight).state == "off") {
-              symbol=24;
+              symbol=48;
             }
             id(disp1).send_command_printf("Lights.light1.pic=%i", symbol);
 
@@ -624,9 +647,9 @@ text_sensor:
         - wait_until:
             switch.is_on: nextion_init
         - lambda: |-
-            int symbol = 33;
+            int symbol = 43;
             if (id(lampada_foto).state == "off") {
-              symbol=32;
+              symbol=42;
             }
             id(disp1).send_command_printf("Lights.light2.pic=%i", symbol);
 
@@ -676,9 +699,9 @@ text_sensor:
         - wait_until:
             switch.is_on: nextion_init
         - lambda: |-
-            int symbol = 33;
+            int symbol = 47;
             if (id(tv).state == "off") {
-              symbol=32;
+              symbol=46;
             }
             id(disp1).send_command_printf("Lights.light4.pic=%i", symbol);
 
@@ -702,9 +725,9 @@ text_sensor:
         - wait_until:
             switch.is_on: nextion_init
         - lambda: |-
-            int symbol = 33;
+            int symbol = 41;
             if (id(ironman).state == "off") {
-              symbol=32;
+              symbol=40;
             }
             id(disp1).send_command_printf("Lights.light5.pic=%i", symbol);
 
@@ -722,15 +745,15 @@ text_sensor:
   # Light setup, seventh light. If you want to leave a light out, just comment out the section for the light and name.
   - platform: homeassistant
     id: macchinetta_caffe
-    entity_id: light.macchinetta_caffe
+    entity_id: switch.macchinetta_caffe
     on_value:
       then:
         - wait_until:
             switch.is_on: nextion_init
         - lambda: |-
-            int symbol = 33;
+            int symbol = 39;
             if (id(macchinetta_caffe).state == "off") {
-              symbol=32;
+              symbol=38;
             }
             id(disp1).send_command_printf("Lights.light6.pic=%i", symbol);
 
@@ -754,23 +777,79 @@ text_sensor:
         - wait_until:
             switch.is_on: nextion_init
         - lambda: |-
-            int symbol = 31;
+            int symbol = 45;
             if (id(sonoffmini_ingresso_light).state == "off") {
-              symbol=30;
+              symbol=44;
             }
             id(disp1).send_command_printf("Lights.light7.pic=%i", symbol);
 
   # Light setup, eighths light's name
   - platform: homeassistant
-    id: sonoffmini_ingresso_lightdb_name
+    id: sonoffmini_ingresso_light_name
     entity_id: light.sonoffmini_ingresso_light
     attribute: friendly_name
     on_value:
       then:
         - wait_until:
             switch.is_on: nextion_init
-        - lambda: id(disp1).set_component_text_printf("Lights.light7t", "%s", id(sonoffmini_ingresso_lightdb_name).state.c_str());
+        - lambda: id(disp1).set_component_text_printf("Lights.light7t", "%s", id(sonoffmini_ingresso_light_name).state.c_str());
        
+  # Thermostat page.
+  - platform: homeassistant
+    id: climate_state_1
+    entity_id: climate.termostato
+    on_value:
+      then:
+        - wait_until:
+            switch.is_on: nextion_init
+        - lambda: |-
+            int symbol = 55;
+            if (id(climate_state_1).state == "off") {
+              symbol=56;
+            }
+            id(disp1).send_command_printf("Lights2.Power.pic=%i", symbol);
+
+  - platform: homeassistant
+    id: climate_state_2
+    entity_id: climate.termostato
+    on_value:
+      then:
+        - wait_until:
+            switch.is_on: nextion_init
+        - lambda: |-
+            int symbol = 51;
+            if (id(climate_state_2).state == "cool") {
+              symbol=52;
+            }
+            id(disp1).send_command_printf("Lights2.Cool.pic=%i", symbol);
+
+  - platform: homeassistant
+    id: climate_state_3
+    entity_id: climate.termostato
+    on_value:
+      then:
+        - wait_until:
+            switch.is_on: nextion_init
+        - lambda: |-
+            int symbol = 53;
+            if (id(climate_state_3).state == "heat") {
+              symbol=54;
+            }
+            id(disp1).send_command_printf("Lights2.Heat.pic=%i", symbol);
+
+  - platform: homeassistant
+    id: caldaia
+    entity_id: switch.riscaldamento
+    on_value:
+      then:
+        - wait_until:
+            switch.is_on: nextion_init
+        - lambda: |-
+            int symbol = 58;
+            if (id(caldaia).state == "on") {
+              symbol=59;
+            }
+            id(disp1).send_command_printf("Lights2.radiator.pic=%i", symbol);
 
 number:
   # Screen brightness
@@ -813,7 +892,7 @@ display:
     on_setup:
       then:
         # Enable 1 light page (up to 4 available)
-        - lambda: id(disp1).send_command_printf("Lights.pages.val=1");
+        - lambda: id(disp1).send_command_printf("Lights.pages.val=2");
         - number.set:
             id: brightness
             value: 30
