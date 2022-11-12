@@ -47,7 +47,7 @@ api:
             id(disp1).set_component_text_printf("Notifications.head", "%s", header.c_str());
             id(disp1).set_component_text_printf("Notifications.body", "%s", message.c_str());
             id(disp1).send_command_printf("page 6");
-        - rtttl.play: "twobits:d=4,o=5,b=220:c6,8g,8g,a,g,p,b,c6"
+        - rtttl.play: "Imperial:d=4,o=5,b=80:8d.,8d.,8d.,8a#4,16f,8d.,8a#4,16f,d.,32p,8a.,8a.,8a.,8a#,16f,8c#.,8a#4,16f,d."
         - delay: 15s
         - lambda: |-
             id(disp1).send_command_printf("page 0");
@@ -145,8 +145,23 @@ binary_sensor:
     pin:
       number: 27
       inverted: true
-    on_click:
-      - light.toggle: light_relay1
+    on_multi_click:
+    - timing:
+        - ON for 40ms to 400ms
+#        - OFF for at least 330ms
+      then:
+        - light.toggle:
+            id: light_relay1
+    - timing:
+        - ON for at least 1s
+#        - OFF for at least 0.5s
+      then:
+        - homeassistant.event:
+            event: esphome.button_${device_name}
+            data:
+              message: "Long"
+        - logger.log: "Single Long Clicked"
+
 
   # Buttons on the Music page    
   - platform: nextion
@@ -209,10 +224,10 @@ binary_sensor:
 #          data:
 #            entity_id: switch.lg_soggiorno_hifi
 
-#  - platform: nextion
-#    name: $device_name TV Ambientlight
-#    page_id: 1
-#    component_id: 16
+  - platform: nextion
+    name: $device_name TV Ambientlight
+    page_id: 1
+    component_id: 16
 #    on_click:
 #      - homeassistant.service:
 #          service: light.toggle
@@ -325,6 +340,129 @@ binary_sensor:
     name: $device_name Thermostat Down button
     page_id: 8
     component_id: 8
+
+# Keypad page
+
+  - platform: nextion
+    name: KeyPad0
+    internal: true
+    page_id: 13
+    component_id: 11
+    on_click:
+      - homeassistant.event:
+          event: esphome.nspanel_keypad
+          data:
+            message: "0"
+  - platform: nextion
+    name: KeyPad1
+    internal: true
+    page_id: 13
+    component_id: 12
+    on_click:
+      - homeassistant.event:
+          event: esphome.nspanel_keypad
+          data:
+            message: "1"
+  - platform: nextion
+    name: KeyPad2
+    internal: true
+    page_id: 13
+    component_id: 13
+    on_click:
+      - homeassistant.event:
+          event: esphome.nspanel_keypad
+          data:
+            message: "2"
+  - platform: nextion
+    name: KeyPad3
+    internal: true
+    page_id: 13
+    component_id: 14
+    on_click:
+      - homeassistant.event:
+          event: esphome.nspanel_keypad
+          data:
+            message: "3"
+  - platform: nextion
+    name: KeyPad4
+    internal: true
+    page_id: 13
+    component_id: 15
+    on_click:
+      - homeassistant.event:
+          event: esphome.nspanel_keypad
+          data:
+            message: "4"
+  - platform: nextion
+    name: KeyPad5
+    internal: true
+    page_id: 13
+    component_id: 16
+    on_click:
+      - homeassistant.event:
+          event: esphome.nspanel_keypad
+          data:
+            message: "5"
+  - platform: nextion
+    name: KeyPad6
+    internal: true
+    page_id: 13
+    component_id: 17
+    on_click:
+      - homeassistant.event:
+          event: esphome.nspanel_keypad
+          data:
+            message: "6"
+  - platform: nextion
+    name: KeyPad7
+    internal: true
+    page_id: 13
+    component_id: 18
+    on_click:
+      - homeassistant.event:
+          event: esphome.nspanel_keypad
+          data:
+            message: "7"
+  - platform: nextion
+    name: KeyPad8
+    internal: true
+    page_id: 13
+    component_id: 19
+    on_click:
+      - homeassistant.event:
+          event: esphome.nspanel_keypad
+          data:
+            message: "8"
+  - platform: nextion
+    name: KeyPad9
+    internal: true
+    page_id: 13
+    component_id: 20
+    on_click:
+      - homeassistant.event:
+          event: esphome.nspanel_keypad
+          data:
+            message: "9"
+  - platform: nextion
+    name: KeyPadCanc
+    internal: true
+    page_id: 13
+    component_id: 25
+    on_click:
+      - homeassistant.event:
+          event: esphome.nspanel_keypad
+          data:
+            message: "canc"
+  - platform: nextion
+    name: KeyPadOK
+    internal: true
+    page_id: 13
+    component_id: 26
+    on_click:
+      - homeassistant.event:
+          event: esphome.nspanel_keypad
+          data:
+            message: "OK"
 
 output:
   # Buzzer for playing tones
@@ -666,19 +804,19 @@ text_sensor:
             }
             id(disp1).send_command_printf("Music.p2.pic=%i", symbol);
 
-#  - platform: homeassistant
-#    id: light_ambilight_soggiorno
-#    entity_id: light.ambilight_soggiorno
-#    on_value:
-#      then:
-#        - wait_until:
-#            switch.is_on: nextion_init
-#        - lambda: |-
-#            int symbol = 48;
-#            if (id(light_ambilight_soggiorno).state == "on") {
-#              symbol=49;
-#            }
-#            id(disp1).send_command_printf("Music.p2.pic=%i", symbol);
+  - platform: homeassistant
+    id: ambilight_soggiorno
+    entity_id: light.ambilight_soggiorno_light
+    on_value:
+      then:
+        - wait_until:
+            switch.is_on: nextion_init
+        - lambda: |-
+            int symbol = 48;
+            if (id(ambilight_soggiorno).state == "on") {
+              symbol=49;
+            }
+            id(disp1).send_command_printf("Music.p3.pic=%i", symbol);
 
   # Light setup, first light. If you want to leave a light out, just comment out the section for the light and name.
   - platform: homeassistant
@@ -696,15 +834,15 @@ text_sensor:
             id(disp1).send_command_printf("Lights.light0.pic=%i", symbol);
 
   # Light setup, first light's name
-  - platform: homeassistant
-    id: light_applique_name
-    entity_id: light.applique
-    attribute: friendly_name
-    on_value:
-      then:
-        - wait_until:
-            switch.is_on: nextion_init
-        - lambda: id(disp1).set_component_text_printf("Lights.light0t", "%s", id(light_applique_name).state.c_str());
+#  - platform: homeassistant
+#    id: light_applique_name
+#    entity_id: light.applique
+#    attribute: friendly_name
+#    on_value:
+#      then:
+#        - wait_until:
+#            switch.is_on: nextion_init
+#        - lambda: id(disp1).set_component_text_printf("Lights.light0t", "%s", id(light_applique_name).state.c_str());
 
   # Light setup, second light. If you want to leave a light out, just comment out the section for the light and name.
   - platform: homeassistant
@@ -721,16 +859,16 @@ text_sensor:
             }
             id(disp1).send_command_printf("Lights.light1.pic=%i", symbol);
 
-  # Light setup, second light's name
-  - platform: homeassistant
-    id: lampada_albero_name
-    entity_id: light.lampada_albero
-    attribute: friendly_name
-    on_value:
-      then:
-        - wait_until:
-            switch.is_on: nextion_init
-        - lambda: id(disp1).set_component_text_printf("Lights.light1t", "%s", id(lampada_albero_name).state.c_str());
+#  # Light setup, second light's name
+#  - platform: homeassistant
+#    id: lampada_albero_name
+#    entity_id: light.lampada_albero
+#    attribute: friendly_name
+#    on_value:
+#      then:
+#        - wait_until:
+#            switch.is_on: nextion_init
+#        - lambda: id(disp1).set_component_text_printf("Lights.light1t", "%s", id(lampada_albero_name).state.c_str());
 
   # Light setup, third light. If you want to leave a light out, just comment out the section for the light and name.
   - platform: homeassistant
@@ -747,16 +885,16 @@ text_sensor:
             }
             id(disp1).send_command_printf("Lights.light2.pic=%i", symbol);
 
-  # Light setup, third light's name
-  - platform: homeassistant
-    id: macchinetta_caffe_name
-    entity_id: switch.macchinetta_caffe
-    attribute: friendly_name
-    on_value:
-      then:
-        - wait_until:
-            switch.is_on: nextion_init
-        - lambda: id(disp1).set_component_text_printf("Lights.light2t", "%s", id(macchinetta_caffe_name).state.c_str());
+#  # Light setup, third light's name
+#  - platform: homeassistant
+#    id: macchinetta_caffe_name
+#    entity_id: switch.macchinetta_caffe
+#    attribute: friendly_name
+#    on_value:
+#      then:
+#        - wait_until:
+#            switch.is_on: nextion_init
+#        - lambda: id(disp1).set_component_text_printf("Lights.light2t", "%s", id(macchinetta_caffe_name).state.c_str());
 
   # Light setup, fourth light. If you want to leave a light out, just comment out the section for the light and name.
   - platform: homeassistant
@@ -774,15 +912,15 @@ text_sensor:
             id(disp1).send_command_printf("Lights.light3.pic=%i", symbol);
 
   # Light setup, fourth light's name
-  - platform: homeassistant
-    id: faretti_cucina_name
-    entity_id: light.faretti_cucina
-    attribute: friendly_name
-    on_value:
-      then:
-        - wait_until:
-            switch.is_on: nextion_init
-        - lambda: id(disp1).set_component_text_printf("Lights.light3t", "%s", id(faretti_cucina_name).state.c_str());
+#  - platform: homeassistant
+#    id: faretti_cucina_name
+#    entity_id: light.faretti_cucina
+#    attribute: friendly_name
+#    on_value:
+#      then:
+#        - wait_until:
+#            switch.is_on: nextion_init
+#        - lambda: id(disp1).set_component_text_printf("Lights.light3t", "%s", id(faretti_cucina_name).state.c_str());
 
   # Light setup, fifth light. If you want to leave a light out, just comment out the section for the light and name.
   - platform: homeassistant
@@ -800,15 +938,15 @@ text_sensor:
             id(disp1).send_command_printf("Lights.light5.pic=%i", symbol);
 
   # Light setup, fifth light's name
-  - platform: homeassistant
-    id: lampada_foto_name
-    entity_id: light.lampada_foto
-    attribute: friendly_name
-    on_value:
-      then:
-        - wait_until:
-            switch.is_on: nextion_init
-        - lambda: id(disp1).set_component_text_printf("Lights.light5t", "%s", id(lampada_foto_name).state.c_str());
+#  - platform: homeassistant
+#    id: lampada_foto_name
+#    entity_id: light.lampada_foto
+#    attribute: friendly_name
+#    on_value:
+#      then:
+#        - wait_until:
+#            switch.is_on: nextion_init
+#        - lambda: id(disp1).set_component_text_printf("Lights.light5t", "%s", id(lampada_foto_name).state.c_str());
 
   # Light setup, sixth light. If you want to leave a light out, just comment out the section for the light and name.
   - platform: homeassistant
@@ -826,15 +964,15 @@ text_sensor:
             id(disp1).send_command_printf("Lights.light6.pic=%i", symbol);
 
   # Light setup, sixths light's name
-  - platform: homeassistant
-    id: sonoffmini_ingresso_light_name
-    entity_id: light.sonoffmini_ingresso_light
-    attribute: friendly_name
-    on_value:
-      then:
-        - wait_until:
-            switch.is_on: nextion_init
-        - lambda: id(disp1).set_component_text_printf("Lights.light6t", "%s", id(sonoffmini_ingresso_light_name).state.c_str());
+#  - platform: homeassistant
+#    id: sonoffmini_ingresso_light_name
+#    entity_id: light.sonoffmini_ingresso_light
+#    attribute: friendly_name
+#    on_value:
+#      then:
+#        - wait_until:
+#            switch.is_on: nextion_init
+#        - lambda: id(disp1).set_component_text_printf("Lights.light6t", "%s", id(sonoffmini_ingresso_light_name).state.c_str());
 
   # Light setup, seventh light. If you want to leave a light out, just comment out the section for the light and name.
   - platform: homeassistant
@@ -852,15 +990,15 @@ text_sensor:
             id(disp1).send_command_printf("Lights.light7.pic=%i", symbol);
 
   # Light setup, seventh light's name
-  - platform: homeassistant
-    id: led_cucina_name
-    entity_id: light.led_cucina
-    attribute: friendly_name
-    on_value:
-      then:
-        - wait_until:
-            switch.is_on: nextion_init
-        - lambda: id(disp1).set_component_text_printf("Lights.light7t", "%s", id(led_cucina_name).state.c_str());
+#  - platform: homeassistant
+#    id: led_cucina_name
+#    entity_id: light.led_cucina
+#    attribute: friendly_name
+#    on_value:
+#      then:
+#        - wait_until:
+#            switch.is_on: nextion_init
+#        - lambda: id(disp1).set_component_text_printf("Lights.light7t", "%s", id(led_cucina_name).state.c_str());
        
   # Thermostat page.
   - platform: homeassistant
@@ -918,6 +1056,17 @@ text_sensor:
               symbol=59;
             }
             id(disp1).send_command_printf("Thermostat.radiator.pic=%i", symbol);
+
+  # Keypad code
+  - platform: homeassistant
+    id: keypad_code
+    entity_id: input_text.nspanel_keypad
+    on_value:
+      then:
+        - wait_until:
+            switch.is_on: nextion_init
+        - lambda: |-
+            id(disp1).set_component_text_printf("Keypad.input_code", "%s", id(keypad_code).state.c_str());
 
 number:
   # Screen brightness
