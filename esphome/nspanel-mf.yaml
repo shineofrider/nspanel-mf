@@ -167,32 +167,27 @@ binary_sensor:
   - platform: nextion
     name: $device_name Music previous
     page_id: 1
-    component_id: 1
+    component_id: 5
 
   - platform: nextion
     name: $device_name Music play pause
     page_id: 1
-    component_id: 2
+    component_id: 6
 
   - platform: nextion
     name: $device_name Music next
     page_id: 1
-    component_id: 3
-
-#  - platform: nextion
-#    name: $device_name Music cast
-#    page_id: 1
-#    component_id: 4
+    component_id: 7
 
   - platform: nextion
     name: $device_name Music voldown
     page_id: 1
-    component_id: 7
+    component_id: 11
     
   - platform: nextion
     name: $device_name Music volup
     page_id: 1
-    component_id: 8
+    component_id: 12
 
   - platform: nextion
     name: $device_name Ironman Button
@@ -322,27 +317,57 @@ binary_sensor:
     component_id: 2
 
   - platform: nextion
-    name: $device_name Thermostat Cool button
+    name: $device_name Thermostat Heat button
     page_id: 8
     component_id: 4
 
   - platform: nextion
-    name: $device_name Thermostat Heat button
-    page_id: 8
-    component_id: 6
-
-  - platform: nextion
     name: $device_name Thermostat Up button
     page_id: 8
-    component_id: 7
+    component_id: 5
 
   - platform: nextion
     name: $device_name Thermostat Down button
     page_id: 8
-    component_id: 8
+    component_id: 6
+
+  # Buttons on the Clima page
+  - platform: nextion
+    name: $device_name Clima Power button
+    page_id: 14
+    component_id: 2
+
+  - platform: nextion
+    name: $device_name Clima Cool button
+    page_id: 14
+    component_id: 14
+
+  - platform: nextion
+    name: $device_name Clima Heat button
+    page_id: 14
+    component_id: 4
+
+  - platform: nextion
+    name: $device_name Clima Dry button
+    page_id: 14
+    component_id: 16
+
+  - platform: nextion
+    name: $device_name Clima Fan button
+    page_id: 14
+    component_id: 18
+
+  - platform: nextion
+    name: $device_name Clima Up button
+    page_id: 14
+    component_id: 5
+
+  - platform: nextion
+    name: $device_name Clima Down button
+    page_id: 14
+    component_id: 6
 
 # Keypad page
-
   - platform: nextion
     name: KeyPad0
     internal: true
@@ -569,7 +594,7 @@ sensor:
   - platform: adc
     id: ntc_source
     pin: 38
-    update_interval: 10s
+    update_interval: 30s
     attenuation: 11db
 
   # Internal temperature sensor, adc reading converted to resistance (calculation) 
@@ -665,7 +690,38 @@ sensor:
       then:
         - wait_until:
             switch.is_on: nextion_init
-        - lambda: id(disp1).set_component_text_printf("Thermostat.setpoint", "%.1f", id(setpoint_value).state);        
+        - lambda: id(disp1).set_component_text_printf("Thermostat.setpoint", "%.1f", id(setpoint_value).state);
+
+  # Temperature clima
+  - platform: homeassistant
+    id: tempclima
+    entity_id: climate.aermec
+    attribute: current_temperature
+    on_value:
+      then:
+        - wait_until:
+            switch.is_on: nextion_init
+        - lambda: id(disp1).set_component_text_printf("Clima.tempclima", "%.1f", id(tempclima).state);
+  
+  - platform: homeassistant
+    id: setpoint_clima
+    entity_id: climate.aermec
+    attribute: temperature
+    on_value:
+      then:
+        - wait_until:
+            switch.is_on: nextion_init
+        - lambda: id(disp1).set_component_text_printf("Clima.setpoint", "%.1f", id(setpoint_clima).state); 
+
+  - platform: homeassistant
+    id: clima_humidity
+    entity_id: climate.aermec
+    attribute: current_humidity
+    on_value:
+      then:
+        - wait_until:
+            switch.is_on: nextion_init
+        - lambda: id(disp1).set_component_text_printf("Clima.hum", "%.1f", id(clima_humidity).state);
 
 text_sensor:
   # IP address of device. Not really needed for HA (as HA already knows it), but for showing on the display during startup. The startup screen will leave on if no instance connects to the API.
@@ -1002,7 +1058,7 @@ text_sensor:
        
   # Thermostat page.
   - platform: homeassistant
-    id: climate_state_1
+    id: thermostat_state_1
     entity_id: climate.termostato
     on_value:
       then:
@@ -1010,27 +1066,13 @@ text_sensor:
             switch.is_on: nextion_init
         - lambda: |-
             int symbol = 55;
-            if (id(climate_state_1).state == "off") {
+            if (id(thermostat_state_1).state == "off") {
               symbol=56;
             }
             id(disp1).send_command_printf("Thermostat.Power.pic=%i", symbol);
 
   - platform: homeassistant
-    id: climate_state_2
-    entity_id: climate.termostato
-    on_value:
-      then:
-        - wait_until:
-            switch.is_on: nextion_init
-        - lambda: |-
-            int symbol = 51;
-            if (id(climate_state_2).state == "cool") {
-              symbol=52;
-            }
-            id(disp1).send_command_printf("Thermostat.Cool.pic=%i", symbol);
-
-  - platform: homeassistant
-    id: climate_state_3
+    id: thermostat_state_2
     entity_id: climate.termostato
     on_value:
       then:
@@ -1038,7 +1080,7 @@ text_sensor:
             switch.is_on: nextion_init
         - lambda: |-
             int symbol = 53;
-            if (id(climate_state_3).state == "heat") {
+            if (id(thermostat_state_2).state == "heat") {
               symbol=54;
             }
             id(disp1).send_command_printf("Thermostat.Heat.pic=%i", symbol);
@@ -1056,6 +1098,84 @@ text_sensor:
               symbol=59;
             }
             id(disp1).send_command_printf("Thermostat.radiator.pic=%i", symbol);
+
+  # Clima page.
+  - platform: homeassistant
+    id: aermec_state_1
+    entity_id: climate.aermec
+    on_value:
+      then:
+        - wait_until:
+            switch.is_on: nextion_init
+        - lambda: |-
+            int symbol = 73;
+            if (id(aermec_state_1).state == "off") {
+              symbol=74;
+            }
+            id(disp1).send_command_printf("Clima.Power.pic=%i", symbol);
+
+  - platform: homeassistant
+    id: aermec_state_2
+    entity_id: climate.aermec
+    on_value:
+      then:
+        - wait_until:
+            switch.is_on: nextion_init
+        - lambda: |-
+            int symbol = 51;
+            if (id(aermec_state_2).state == "cool") {
+              symbol=52;
+            }
+            id(disp1).send_command_printf("Clima.Cool.pic=%i", symbol);
+
+  - platform: homeassistant
+    id: aermec_state_3
+    entity_id: climate.aermec
+    on_value:
+      then:
+        - wait_until:
+            switch.is_on: nextion_init
+        - lambda: |-
+            int symbol = 71;
+            if (id(aermec_state_3).state == "heat") {
+              symbol=72;
+            }
+            id(disp1).send_command_printf("Clima.Heat.pic=%i", symbol);
+
+  - platform: homeassistant
+    id: aermec_state_4
+    entity_id: climate.aermec
+    on_value:
+      then:
+        - wait_until:
+            switch.is_on: nextion_init
+        - lambda: |-
+            int symbol = 65;
+            if (id(aermec_state_4).state == "dry") {
+              symbol=66;
+            }
+            id(disp1).send_command_printf("Clima.Dry.pic=%i", symbol);
+
+  - platform: homeassistant
+    id: aermec_fan
+    entity_id: climate.aermec
+    attribute: fan_mode
+    on_value:
+      then:
+        - wait_until:
+            switch.is_on: nextion_init
+        - lambda: |-
+            int symbol = 67;
+            if (id(aermec_fan).state == "low") {
+              symbol=68;
+            }
+            if (id(aermec_fan).state == "mid") {
+              symbol=69;
+            }
+            if (id(aermec_fan).state == "high") {
+              symbol=70;
+            }
+            id(disp1).send_command_printf("Clima.Fan.pic=%i", symbol);
 
   # Keypad code
   - platform: homeassistant
